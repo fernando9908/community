@@ -1,9 +1,12 @@
 package com.julymelon.community;
 
 import com.julymelon.community.dao.DiscussPostMapper;
+import com.julymelon.community.dao.LoginTicketMapper;
 import com.julymelon.community.dao.UserMapper;
 import com.julymelon.community.entity.DiscussPost;
+import com.julymelon.community.entity.LoginTicket;
 import com.julymelon.community.entity.User;
+import com.julymelon.community.util.CommunityUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,7 +25,7 @@ public class MapperTests {
 
     @Test
     public void testSelectUser() {
-        User user = userMapper.selectById(101);
+        User user = userMapper.selectById(0);
         System.out.println(user);
         System.out.println(userMapper);
 
@@ -50,13 +53,17 @@ public class MapperTests {
 
     @Test
     public void testUpdatetUser() {
-        int rows = userMapper.updateStatus(150, 1);
+/*        int rows = userMapper.updateStatus(150, 1);
         System.out.println(rows);
 
         rows = userMapper.updateHeader(150, "http://www.nowcoder.com/102.png");
         System.out.println(rows);
 
         rows = userMapper.updatePassword(150, "hello");
+        System.out.println(rows);*/
+
+        // 操作失误修改密码，通过后台将数据库密码重新修改
+        int rows = userMapper.updatePassword(152, CommunityUtil.md5("123456" + "1114e"));
         System.out.println(rows);
     }
 
@@ -82,5 +89,31 @@ public class MapperTests {
         rows = discussPostMapper.selectDiscussPostRows(149);
         System.out.println(rows);
     }
+
+
+    @Autowired
+    private LoginTicketMapper loginTicketMapper;
+
+    @Test
+    public void testInsertLoginTicket(){
+        LoginTicket loginTicket = new LoginTicket();
+        loginTicket.setUserId(101);
+        loginTicket.setTicket("abc");
+        loginTicket.setStatus(0);
+        loginTicket.setExpired(new Date(System.currentTimeMillis() + 1000 * 60 * 10));
+
+        loginTicketMapper.insertLoginTicket(loginTicket);
+    }
+
+    @Test
+    public void testSelectUpdateLoginTicket(){
+        LoginTicket loginTicket = loginTicketMapper.selectByTicket("abc");
+        System.out.println(loginTicket);
+
+        loginTicketMapper.updateStatus("abc", 1);
+        loginTicket = loginTicketMapper.selectByTicket("abc");
+        System.out.println(loginTicket);
+    }
+
 
 }

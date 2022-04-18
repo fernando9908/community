@@ -3,9 +3,11 @@ package com.julymelon.community.service;
 import com.julymelon.community.dao.DiscussPostMapper;
 import com.julymelon.community.dao.UserMapper;
 import com.julymelon.community.entity.DiscussPost;
+import com.julymelon.community.util.SensitiveFilter;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 import java.util.List;
 
@@ -23,5 +25,30 @@ public class DiscussPostService {
         return discussPostMapper.selectDiscussPostRows(userId);
     }
 
+    @Autowired
+    private SensitiveFilter sensitiveFilter;
+
+    public int addDiscussPost(DiscussPost post) {
+        if (post == null) {
+            throw new IllegalArgumentException("参数不能为空!");
+        }
+
+        // 转义HTML标记
+        post.setTitle(HtmlUtils.htmlEscape(post.getTitle()));
+        post.setContent(HtmlUtils.htmlEscape(post.getContent()));
+        // 过滤敏感词
+        post.setTitle(sensitiveFilter.filter(post.getTitle()));
+        post.setContent(sensitiveFilter.filter(post.getContent()));
+
+        return discussPostMapper.insertDiscussPost(post);
+    }
+
+    public DiscussPost findDiscussPostById(int id) {
+        return discussPostMapper.selectDiscussPostById(id);
+    }
+
+    public int updateCommentCount(int id, int commentCount) {
+        return discussPostMapper.updateCommentCount(id, commentCount);
+    }
 
 }

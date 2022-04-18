@@ -8,8 +8,13 @@
         id, user_id, title, content, type, status, create_time, comment_count, score
     </sql>
 
+    <sql id="insertFields">
+        user_id, title, content, type, status, create_time, comment_count, score
+    </sql>
+
     <!--一般情况下，查询语句需要申明返回类型
-    更新和插入需要申明传入参数的类型-->
+    更新和插入需要申明传入参数的类型，因为更新和插入返回的通常是int类型
+    原则是基本数据类型不用声明，自定义的类需要声明-->
     <select id="selectDiscussPosts" resultType="DiscussPost">
         select <include refid="selectFields"/>
         from discuss_post
@@ -29,5 +34,20 @@
             and user_id = #{userId}
         </if>
     </select>
+
+    <insert id="insertDiscussPost" parameterType="DiscussPost">
+        insert into discuss_post(<include refid="insertFields"></include>)
+        values(#{userId},#{title},#{content},#{type},#{status},#{createTime},#{commentCount},#{score})
+    </insert>
+
+    <select id="selectDiscussPostById" resultType="DiscussPost">
+        select <include refid="selectFields"></include>
+        from discuss_post
+        where id = #{id}
+    </select>
+
+    <update id="updateCommentCount">
+        update discuss_post set comment_count = #{commentCount} where id = #{id}
+    </update>
 
 </mapper>

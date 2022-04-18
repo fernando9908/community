@@ -52,7 +52,7 @@ public class Page {
         this.path = path;
     }
 
-    public int getOffgset() {
+    public int getOffset() {
         return limit * (current - 1);
     }
 
