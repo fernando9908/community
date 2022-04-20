@@ -2,9 +2,11 @@ package com.julymelon.community;
 
 import com.julymelon.community.dao.DiscussPostMapper;
 import com.julymelon.community.dao.LoginTicketMapper;
+import com.julymelon.community.dao.MessageMapper;
 import com.julymelon.community.dao.UserMapper;
 import com.julymelon.community.entity.DiscussPost;
 import com.julymelon.community.entity.LoginTicket;
+import com.julymelon.community.entity.Message;
 import com.julymelon.community.entity.User;
 import com.julymelon.community.util.CommunityUtil;
 import org.junit.jupiter.api.Test;
@@ -115,5 +117,30 @@ public class MapperTests {
         System.out.println(loginTicket);
     }
 
+    @Autowired
+    private MessageMapper messageMapper;
+
+    @Test
+    public void testSelectLetters() {
+        List<Message> list = messageMapper.selectConversations(111, 0, 20);
+        for (Message message : list) {
+            System.out.println(message);
+        }
+
+        int count = messageMapper.selectConversationCount(111);
+        System.out.println(count);
+
+        list = messageMapper.selectLetters("111_112", 0, 10);
+        for (Message message : list) {
+            System.out.println(message);
+        }
+
+        count = messageMapper.selectLetterCount("111_112");
+        System.out.println(count);
+
+        count = messageMapper.selectLetterUnreadCount(131, "111_131");
+        System.out.println(count);
+
+    }
 
 }
