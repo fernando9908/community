@@ -4,6 +4,7 @@ import com.julymelon.community.entity.LoginTicket;
 import org.apache.ibatis.annotations.*;
 
 @Mapper
+@Deprecated
 public interface LoginTicketMapper {
 
     /*通过注解写sql语句

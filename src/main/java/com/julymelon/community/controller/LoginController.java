@@ -7,11 +7,13 @@ import com.julymelon.community.service.UserService;
 import com.julymelon.community.util.CommunityConstant;
 import com.julymelon.community.util.CommunityUtil;
 import com.julymelon.community.util.MailClient;
+import com.julymelon.community.util.RedisKeyUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Controller
 public class LoginController implements CommunityConstant {
@@ -77,6 +80,7 @@ public class LoginController implements CommunityConstant {
     @Value("${server.servlet.context-path}")
     private String contextPath;
 
+    /*
     @RequestMapping(path = "/login", method = RequestMethod.POST)
     public String login(Model model, String username, String password, String code, boolean rememberme, HttpSession session, HttpServletResponse response) {
 
@@ -104,12 +108,53 @@ public class LoginController implements CommunityConstant {
             return "/site/login";
         }
     }
+    */
+
+    // 优化登录模块：不使用session
+    @RequestMapping(path = "/login", method = RequestMethod.POST)
+    public String login(Model model, String username, String password, String code, boolean rememberme, HttpServletResponse response, @CookieValue("kaptchaOwner") String kaptchaOwner) {
+
+        // 检查验证码
+        // kaptcha理论上不可能为空
+        String kaptcha = null;
+        if (StringUtils.isNotBlank(kaptchaOwner)) {
+            String redisKey = RedisKeyUtil.getKaptchaKey(kaptchaOwner);
+            kaptcha = (String) redisTemplate.opsForValue().get(redisKey);
+        }
+
+        if (StringUtils.isBlank(kaptcha)) {
+            model.addAttribute("codeMsg", "验证码失效!");
+            return "/site/login";
+        }
+
+        if (StringUtils.isBlank(code) || !kaptcha.equalsIgnoreCase(code)) {
+            model.addAttribute("codeMsg", "验证码不正确!");
+            return "/site/login";
+        }
+
+        // 检查账号,密码
+        int expiredSeconds = rememberme ? REMEMBER_EXPIRED_SECONDS : DEFAULT_EXPIRED_SECONDS;
+        Map<String, Object> map = userService.login(username, password, expiredSeconds);
+        if (map.containsKey("ticket")) {
+            Cookie cookie = new Cookie("ticket", map.get("ticket").toString());
+            cookie.setPath(contextPath);
+            // 与数据库保持一致
+            cookie.setMaxAge(expiredSeconds);
+            response.addCookie(cookie);
+            return "redirect:/index";
+        } else {
+            model.addAttribute("usernameMsg", map.get("usernameMsg"));
+            model.addAttribute("passwordMsg", map.get("passwordMsg"));
+            return "/site/login";
+        }
+    }
 
     @Autowired
     private Producer kaptchaProducer;
 
     private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
+    /*
     @RequestMapping(path = "/kaptcha", method = RequestMethod.GET)
     public void getKaptcha(HttpServletResponse response, HttpSession session) {
         // 生成验证码
@@ -128,6 +173,43 @@ public class LoginController implements CommunityConstant {
             logger.error("响应验证码失败:" + e.getMessage());
         }
     }
+    */
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    // 重构验证码
+    @RequestMapping(path = "/kaptcha", method = RequestMethod.GET)
+    public void getKaptcha(HttpServletResponse response) {
+        // 生成验证码
+        String text = kaptchaProducer.createText();
+        BufferedImage image = kaptchaProducer.createImage(text);
+
+        // 验证码的归属
+        String kaptchaOwner = CommunityUtil.generateUUID();
+        Cookie cookie = new Cookie("kaptchaOwner", kaptchaOwner);
+
+        // 不设置的情况是默认浏览器关闭即失效
+        // cookie.setMaxAge(60);
+
+        cookie.setPath(contextPath);
+        response.addCookie(cookie);
+
+        // 将验证码存入redis
+        String redisKey = RedisKeyUtil.getKaptchaKey(kaptchaOwner);
+        redisTemplate.opsForValue().set(redisKey, text, 60, TimeUnit.SECONDS);
+
+
+        // 将图片输出给浏览器
+        response.setContentType("image/png");
+        try {
+            OutputStream os = response.getOutputStream();
+            ImageIO.write(image, "png", os);
+        } catch (IOException e) {
+            logger.error("响应验证码失败:" + e.getMessage());
+        }
+    }
+
 
     @RequestMapping(path = "/logout", method = RequestMethod.GET)
     public String logout(@CookieValue("ticket") String ticket) {

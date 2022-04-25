@@ -29,6 +29,7 @@ function send_letter() {
 }
 
 function delete_msg() {
+	// 这个方法对于所有×都是公用的，因此需要拿this来进行对应
 	var btn = this;
 	// 获取对应的id值
 	var id = $(btn).prev().val();

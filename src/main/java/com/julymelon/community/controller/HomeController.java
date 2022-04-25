@@ -4,7 +4,9 @@ import com.julymelon.community.entity.DiscussPost;
 import com.julymelon.community.entity.Page;
 import com.julymelon.community.entity.User;
 import com.julymelon.community.service.DiscussPostService;
+import com.julymelon.community.service.LikeService;
 import com.julymelon.community.service.UserService;
+import com.julymelon.community.util.CommunityConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,13 +19,16 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-public class HomeController {
+public class HomeController implements CommunityConstant {
 
     @Autowired
     private DiscussPostService discussPostService;
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private LikeService likeService;
 
     @RequestMapping(value = "/index", method = RequestMethod.GET)
     public String getIndexPage(Model model, Page page) {
@@ -44,6 +49,10 @@ public class HomeController {
                 Map<String, Object> map = new HashMap<>();
                 map.put("user", user);
                 map.put("discussPost", discussPost);
+
+                long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST, discussPost.getId());
+                map.put("likeCount", likeCount);
+
                 discussPosts.add(map);
             }
         }

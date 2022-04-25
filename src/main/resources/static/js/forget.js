@@ -24,6 +24,7 @@ function getVerifyCode() {
             if(data.code == 0) {
                 alert("验证码已发送至您的邮箱,请登录邮箱查看!");
             } else {
+                // 没有对应的msg
                 alert(data.msg);
             }
         }

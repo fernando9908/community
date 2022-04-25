@@ -31,6 +31,10 @@ public class ServiceLogAspect {
         // 用户[1.2.3.4],在[xxx],访问了[com.julymelon.community.service.xxx()].
         // 工具类的静态方法
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        // 当特殊调用，例如消费者调用时，就不用记录日志
+        if (attributes == null) {
+            return;
+        }
         HttpServletRequest request = attributes.getRequest();
         String ip = request.getRemoteHost();
         String now = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
