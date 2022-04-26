@@ -59,6 +59,17 @@ public class CommentController implements CommunityConstant {
         }
         eventProducer.fireEvent(event);
 
+        // 只有评论帖子时才触发事件，评论回复不做触发
+        if (comment.getEntityType() == ENTITY_TYPE_POST) {
+            // 触发发帖事件
+            event = new Event()
+                    .setTopic(TOPIC_PUBLISH)
+                    .setUserId(comment.getUserId())
+                    .setEntityType(ENTITY_TYPE_POST)
+                    .setEntityId(discussPostId);
+            eventProducer.fireEvent(event);
+        }
+
         return "redirect:/discuss/detail/" + discussPostId;
     }
 }
