@@ -186,8 +186,8 @@ public class MessageController implements CommunityConstant {
 
         // 查询评论类通知
         Message message = messageService.findLatestNotice(user.getId(), TOPIC_COMMENT);
-        Map<String, Object> messageVO = new HashMap<>();
 
+        Map<String, Object> messageVO = new HashMap<>();
         messageVO.put("message", message);
         if (message != null) {
             // 将内容由字符串还原为对象
@@ -211,8 +211,8 @@ public class MessageController implements CommunityConstant {
         // 查询点赞类通知
         // 复用变量名：message和messageVO
         message = messageService.findLatestNotice(user.getId(), TOPIC_LIKE);
-        messageVO = new HashMap<>();
 
+        messageVO = new HashMap<>();
         messageVO.put("message", message);
         if (message != null) {
             String content = HtmlUtils.htmlUnescape(message.getContent());
@@ -233,8 +233,8 @@ public class MessageController implements CommunityConstant {
 
         // 查询关注类通知
         message = messageService.findLatestNotice(user.getId(), TOPIC_FOLLOW);
-        messageVO = new HashMap<>();
 
+        messageVO = new HashMap<>();
         messageVO.put("message", message);
         if (message != null) {
             String content = HtmlUtils.htmlUnescape(message.getContent());

@@ -8,7 +8,9 @@ import com.julymelon.community.service.LikeService;
 import com.julymelon.community.util.CommunityConstant;
 import com.julymelon.community.util.CommunityUtil;
 import com.julymelon.community.util.HostHolder;
+import com.julymelon.community.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -28,6 +30,9 @@ public class LikeController implements CommunityConstant {
 
     @Autowired
     private EventProducer eventProducer;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     // 不加此注解会出现异常
     @LoginRequired
@@ -62,6 +67,14 @@ public class LikeController implements CommunityConstant {
                     .setEntityUserId(entityUserId)
                     .setData("postId", postId);
             eventProducer.fireEvent(event);
+        }
+
+        // 只有对帖子点赞才生效
+        // 把帖子ID放入redis缓存
+        if(entityType == ENTITY_TYPE_POST) {
+            // 计算帖子分数
+            String redisKey = RedisKeyUtil.getPostScoreKey();
+            redisTemplate.opsForSet().add(redisKey, postId);
         }
 
         // 只有返回状态码为0的状态

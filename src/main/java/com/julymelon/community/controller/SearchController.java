@@ -35,6 +35,43 @@ public class SearchController implements CommunityConstant {
 
     private static final Logger logger = LoggerFactory.getLogger(SearchController.class);
 
+    @RequestMapping(path = "/search", method = RequestMethod.GET)
+    public String search(String keyword, Page page, Model model) {
+
+        // 搜索帖子
+        // 因为使用searchDiscussPost方法，必须抛异常
+        try {
+            // current仍然表示的是偏移量
+            SearchResult searchResult = elasticsearchService.searchDiscussPost(keyword, (page.getCurrent() - 1) * 10, page.getLimit());
+
+            // 聚合数据
+            List<Map<String, Object>> discussPosts = new ArrayList<>();
+            if (searchResult != null) {
+                List<DiscussPost> list = searchResult.getList();
+                for (DiscussPost post : list) {
+                    Map<String, Object> map = new HashMap<>();
+                    // 帖子 和 作者
+                    map.put("post", post);
+                    map.put("user", userService.findUserById(post.getUserId()));
+                    // 点赞数目
+                    map.put("likeCount", likeService.findEntityLikeCount(ENTITY_TYPE_POST, post.getId()));
+
+                    discussPosts.add(map);
+                }
+            }
+            model.addAttribute("discussPosts", discussPosts);
+            model.addAttribute("keyword", keyword);
+            //分页信息
+            page.setPath("/search?keyword=" + keyword);
+            page.setRows(searchResult == null ? 0 : (int) searchResult.getTotal());
+        } catch (IOException e) {
+            logger.error("系统出错，没有数据：" + e.getMessage());
+        }
+        return "/site/search";
+    }
+
+    /*
+    // 有错，在没有搜索结果时报错
     // search?keyword=xxx
     @RequestMapping(path = "/search", method = RequestMethod.GET)
     public String search(String keyword, Page page, Model model) {
@@ -70,5 +107,6 @@ public class SearchController implements CommunityConstant {
         }
         return "/site/search";
     }
+    */
 
 }

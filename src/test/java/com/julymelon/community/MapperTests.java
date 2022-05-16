@@ -17,7 +17,6 @@ import org.springframework.test.context.ContextConfiguration;
 import java.util.Date;
 import java.util.List;
 
-
 @SpringBootTest
 @ContextConfiguration(classes = CommunityApplication.class)
 public class MapperTests {
@@ -75,7 +74,7 @@ public class MapperTests {
 
     @Test
     public void testSelectPosts() {
-        List<DiscussPost> discussPosts = discussPostMapper.selectDiscussPosts(0, 0, 10);
+        List<DiscussPost> discussPosts = discussPostMapper.selectDiscussPosts(0, 0, 10, 0);
         for (DiscussPost discussPost : discussPosts) {
             System.out.println(discussPost);
         }
@@ -83,8 +82,8 @@ public class MapperTests {
         int rows = discussPostMapper.selectDiscussPostRows(0);
         System.out.println(rows);
 
-        discussPosts = discussPostMapper.selectDiscussPosts(149, 0, 10);
-        for(DiscussPost discussPost : discussPosts) {
+        discussPosts = discussPostMapper.selectDiscussPosts(149, 0, 10, 0);
+        for (DiscussPost discussPost : discussPosts) {
             System.out.println(discussPost);
         }
 
@@ -97,7 +96,7 @@ public class MapperTests {
     private LoginTicketMapper loginTicketMapper;
 
     @Test
-    public void testInsertLoginTicket(){
+    public void testInsertLoginTicket() {
         LoginTicket loginTicket = new LoginTicket();
         loginTicket.setUserId(101);
         loginTicket.setTicket("abc");
@@ -108,7 +107,7 @@ public class MapperTests {
     }
 
     @Test
-    public void testSelectUpdateLoginTicket(){
+    public void testSelectUpdateLoginTicket() {
         LoginTicket loginTicket = loginTicketMapper.selectByTicket("abc");
         System.out.println(loginTicket);
 
